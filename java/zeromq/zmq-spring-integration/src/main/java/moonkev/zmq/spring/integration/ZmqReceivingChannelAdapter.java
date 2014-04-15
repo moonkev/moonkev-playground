@@ -1,6 +1,7 @@
 package moonkev.zmq.spring.integration;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.core.convert.converter.Converter;
@@ -19,39 +20,60 @@ public class ZmqReceivingChannelAdapter extends MessageProducerSupport implement
 	
 	private boolean bind = false;
 	
-	private String topic = "";
+	private String topic = null;
+	
+	private byte[] topicBytes = null;
 	
 	private Integer socketType;
 	
 	private Converter<byte[], Object> converter;
 	
 	private Thread socketThread;
+	
+	protected final Object startupMonitor = new Object();
 			
 	public void run() {
-		Socket socket = contextManager.context().createSocket(socketType);
-		if (bind) {
-			socket.bind(address);
-		} else {
-			socket.connect(address);
+		Socket socket = null;
+		
+		synchronized (startupMonitor) {
+			try {
+				socket = contextManager.context().createSocket(socketType);
+				if (bind) {
+					socket.bind(address);
+				} else {
+					socket.connect(address);
+				}
+			} finally {
+				startupMonitor.notify();
+			}
 		}
 		
 		if (socketType == ZMQ.SUB) {
-			socket.subscribe(topic.getBytes(ZMQ.CHARSET));
+			if (topic == null) {
+				socket.subscribe(new byte[]{});
+			} else {
+				socket.subscribe(topicBytes);
+			}
 		}
 
 		while (!Thread.currentThread().isInterrupted()) {
 			try {
 				Object payload = null;
-				if (converter != null) {
-					payload = converter.convert(socket.recv());
+				if (topic == null) {
+					byte[] data = socket.recv();
+					payload = converter.convert(data);
+					sendMessage(MessageBuilder.withPayload(payload).build());
 				} else {
-					payload = socket.recvStr();
+					byte[] raw = socket.recv();
+					byte[] data = Arrays.copyOfRange(raw, topicBytes.length, raw.length);
+					payload = converter.convert(data);					
+					sendMessage(MessageBuilder.withPayload(payload).setHeaderIfAbsent("zmq.topic", topic).build());
 				}
-				sendMessage(MessageBuilder.withPayload(payload).build());
 			} catch (Exception e) {
 				if (!contextManager.isRunning()){
 					break;
 				}
+				logger.error("Exception in zmq receiving channel adapter", e);
 			}
 		}
 		socket.close();
@@ -61,6 +83,7 @@ public class ZmqReceivingChannelAdapter extends MessageProducerSupport implement
 		super.onInit();
 		Assert.notNull(socketType, "You must provide a socket type");
 		Assert.notNull(address, "You must provide a valid ZMQ address");
+		Assert.notNull(converter, "You must provide a converter");
 	}
 	
 	protected void doStart() {
@@ -82,6 +105,7 @@ public class ZmqReceivingChannelAdapter extends MessageProducerSupport implement
 	
 	public void setTopic(String topic) {
 		this.topic = topic;
+		this.topicBytes = topic.getBytes(ZMQ.CHARSET);
 	}
 	
 	public void setSocketType(String socketTypeName) {

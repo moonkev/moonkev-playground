@@ -1,5 +1,7 @@
 package moonkev.zmq.spring.integration.schema;
 
+import moonkev.zmq.spring.integration.convert.JsonByteArrayToMapConverter;
+
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.xml.ParserContext;
@@ -21,7 +23,11 @@ public class ZmqInboundChannelAdapterParser extends AbstractChannelAdapterParser
 		IntegrationNamespaceUtils.setValueIfAttributeDefined(builder, element, "bind");
 		IntegrationNamespaceUtils.setValueIfAttributeDefined(builder, element, "topic");
 		IntegrationNamespaceUtils.setReferenceIfAttributeDefined(builder, element, "context-manager");
-		IntegrationNamespaceUtils.setReferenceIfAttributeDefined(builder, element, "converter");
+		if ("".equals(element.getAttribute("converter"))) {
+			builder.addPropertyValue("converter", new JsonByteArrayToMapConverter());
+		} else {
+			builder.addPropertyReference("converter", element.getAttribute("converter"));
+		}		
 		
 		return builder.getBeanDefinition();
 	}

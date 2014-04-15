@@ -68,7 +68,6 @@
 							</xsd:documentation>
 						</xsd:annotation>
 					</xsd:attribute>
-					<xsd:attribute name="topic" type="xsd:string" default="" />
 				</xsd:extension>
 			</xsd:complexContent>
 		</xsd:complexType>
@@ -125,6 +124,7 @@
 	<xsd:complexType name="abstract-zmq-channel-adapter">
 		<xsd:attribute name="address" type="xsd:string" />
 		<xsd:attribute name="bind" type="xsd:string" />
+		<xsd:attribute name="topic" type="xsd:string" />
 		<xsd:attribute name="context-manager" type="xsd:string" default="zmqContextManager" />
 		<xsd:attribute name="socket-type" type="xsd:string" />
 		<xsd:attribute name="converter" type="xsd:string" />

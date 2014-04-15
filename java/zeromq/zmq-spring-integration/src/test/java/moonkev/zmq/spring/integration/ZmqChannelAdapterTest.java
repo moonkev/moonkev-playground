@@ -2,6 +2,7 @@ package moonkev.zmq.spring.integration;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import moonkev.zmq.spring.integration.msgpack.MsgpackContainer;
 
@@ -14,14 +15,20 @@ import org.testng.annotations.Test;
 public class ZmqChannelAdapterTest extends AbstractTestNGSpringContextTests {
 
 	static interface Gateway {
-		void send(MsgpackContainer container);
+		void send(Object data);
 	}
 	
 	@Autowired
-	Gateway gateway;
+	Gateway msgpackContainerGateway;
+	
+	@Autowired
+	Gateway msgpackMapGateway;
+	
+	@Autowired
+	Gateway jsonMapGateway;
 	
 	@Test
-	public void channelTest() throws Exception {
+	public void msgpackContainerChannelTest() throws Exception {
 		for (int i = 0; i < 100; ++i) {
 			MsgpackContainer container = new MsgpackContainer();
 			container.doubleField = 25.5;
@@ -33,7 +40,33 @@ public class ZmqChannelAdapterTest extends AbstractTestNGSpringContextTests {
 			container.mapField = new HashMap<String, String>();
 			container.mapField.put("Alpha", "X");
 			container.mapField.put("Omega", "Y");
-			gateway.send(container);
+			msgpackContainerGateway.send(container);
+		}
+		Thread.sleep(1000);
+	}
+	
+	@Test
+	public void msgpackMapChannelTest() throws Exception {
+		for (int i = 0; i < 100; ++i) {
+			Map<Object, Object> map = new HashMap<Object, Object>();
+			map.put("Count", i);
+			map.put("One", 1);
+			map.put("Two", 2.0);
+			map.put("Three", "MessagePack!");
+			msgpackMapGateway.send(map);
+		}
+		Thread.sleep(1000);
+	}
+	
+	@Test
+	public void jsonMapTest() throws Exception {
+		for (int i = 0; i < 100; ++i) {
+			Map<Object, Object> map = new HashMap<Object, Object>();
+			map.put("Count", i);
+			map.put("One", 1);
+			map.put("Two", 2.0);
+			map.put("Three", "JSON!");
+			jsonMapGateway.send(map);
 		}
 		Thread.sleep(1000);
 	}

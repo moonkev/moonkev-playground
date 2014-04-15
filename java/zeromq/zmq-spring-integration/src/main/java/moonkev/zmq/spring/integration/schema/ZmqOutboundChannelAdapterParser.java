@@ -1,5 +1,7 @@
 package moonkev.zmq.spring.integration.schema;
 
+import moonkev.zmq.spring.integration.convert.MapToJsonByteArrayConverter;
+
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.xml.ParserContext;
@@ -17,8 +19,13 @@ public class ZmqOutboundChannelAdapterParser extends AbstractOutboundChannelAdap
 		builder.addPropertyValue("address", element.getAttribute("address"));
 		builder.addPropertyValue("socketType", element.getAttribute("socket-type"));
 		IntegrationNamespaceUtils.setValueIfAttributeDefined(builder, element, "bind");
+		IntegrationNamespaceUtils.setValueIfAttributeDefined(builder, element, "topic");
 		IntegrationNamespaceUtils.setReferenceIfAttributeDefined(builder, element, "context-manager");
-		IntegrationNamespaceUtils.setReferenceIfAttributeDefined(builder, element, "converter");
+		if ("".equals(element.getAttribute("converter"))) {
+			builder.addPropertyValue("converter", new MapToJsonByteArrayConverter());
+		} else {
+			builder.addPropertyReference("converter", element.getAttribute("converter"));
+		}		
 		
 		return builder.getBeanDefinition();
 	}
