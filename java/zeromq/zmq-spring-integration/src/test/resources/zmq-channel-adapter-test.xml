@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:int="http://www.springframework.org/schema/integration"
+	xmlns:int-zmq="http://moonkev.github.io/schema/zmq-spring-integration"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd
+		http://moonkev.github.io/schema/zmq-spring-integration http://moonkev.github.io/schema/zmq-spring-integration/zmq-spring-integration.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+		
+		
+	<bean id="msgpackContainerToByteArrayConverter" class="moonkev.zmq.spring.integration.msgpack.MsgpackContainerToByteArrayConverter" />
+	
+	<bean id="byteArrayToMsgpackContainerConverter" class="moonkev.zmq.spring.integration.msgpack.ByteArrayToMsgpackContainerConverter" />
+	
+	<int-zmq:context-manager />
+		
+	<int-zmq:inbound-channel-adapter
+		channel="zmq.in" 
+		address="tcp://*:8888"
+		socket-type="SUB"
+		bind="true"
+		converter="byteArrayToMsgpackContainerConverter"  />
+	
+	<int:logging-channel-adapter id="zmq.in" level="INFO" log-full-message="true" />
+	
+	<int:channel id="zmq.out" />
+	
+	<int-zmq:outbound-channel-adapter
+		channel="zmq.out" 
+		address="tcp://127.0.0.1:8888"
+		socket-type="PUB"
+		converter="msgpackContainerToByteArrayConverter" />
+
+	<int:gateway 
+		id="gateway"
+		service-interface="moonkev.zmq.spring.integration.ZmqChannelAdapterTest.Gateway"
+		default-request-channel="zmq.out" />
+		
+</beans>

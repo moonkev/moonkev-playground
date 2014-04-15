@@ -1,0 +1,28 @@
+package moonkev.zmq.spring.integration.schema;
+
+import org.springframework.beans.factory.support.AbstractBeanDefinition;
+import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+import org.springframework.beans.factory.xml.ParserContext;
+import org.springframework.integration.config.xml.AbstractChannelAdapterParser;
+import org.springframework.integration.config.xml.IntegrationNamespaceUtils;
+import org.w3c.dom.Element;
+
+public class ZmqInboundChannelAdapterParser extends AbstractChannelAdapterParser {
+
+	protected AbstractBeanDefinition doParse(Element element, ParserContext parserContext, String channelName) {
+		
+		BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(
+				"moonkev.zmq.spring.integration.ZmqReceivingChannelAdapter");
+		
+		builder.addPropertyReference("outputChannel", channelName);
+		IntegrationNamespaceUtils.setReferenceIfAttributeDefined(builder, element, "error-channel", "errorChannel");
+		builder.addPropertyValue("address", element.getAttribute("address"));
+		builder.addPropertyValue("socketType", element.getAttribute("socket-type"));
+		IntegrationNamespaceUtils.setValueIfAttributeDefined(builder, element, "bind");
+		IntegrationNamespaceUtils.setValueIfAttributeDefined(builder, element, "topic");
+		IntegrationNamespaceUtils.setReferenceIfAttributeDefined(builder, element, "context-manager");
+		IntegrationNamespaceUtils.setReferenceIfAttributeDefined(builder, element, "converter");
+		
+		return builder.getBeanDefinition();
+	}
+}
