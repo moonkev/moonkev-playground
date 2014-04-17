@@ -1,6 +1,5 @@
 package moonkev.zmq.spring.integration;
 
-import java.lang.reflect.Field;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -11,11 +10,10 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.integration.Message;
 import org.springframework.integration.handler.AbstractMessageHandler;
 import org.springframework.util.Assert;
-import org.springframework.util.ReflectionUtils;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQ.Socket;
 
-public class ZmqSendingMessageHandler extends AbstractMessageHandler implements Lifecycle, Runnable {
+public class ZmqSendingMessageHandler extends AbstractMessageHandler implements Lifecycle, Runnable, ZmqContextShutdownListener {
 
 	private ZmqContextManager contextManager;
 	
@@ -33,11 +31,11 @@ public class ZmqSendingMessageHandler extends AbstractMessageHandler implements 
 		
 	private Thread socketThread;
 		
-    private BlockingQueue<Message<?>> messageQueue = new LinkedBlockingQueue<Message<?>>();
+	private BlockingQueue<Message<?>> messageQueue = new LinkedBlockingQueue<Message<?>>();
     
-    protected final Object lifecycleMonitor = new Object();
+	protected final Object lifecycleMonitor = new Object();
     
-    protected final Object startupMonitor = new Object();
+	protected final Object startupMonitor = new Object();
 	
 	protected void handleMessageInternal(Message<?> message) throws Exception {
 		messageQueue.offer(message);
@@ -92,7 +90,7 @@ public class ZmqSendingMessageHandler extends AbstractMessageHandler implements 
 		synchronized (lifecycleMonitor) {
 			if (!running) {
 				socketThread = new Thread(this);
-				contextManager.registerThread(socketThread);
+				contextManager.registerShutdownListener(this);
 				socketThread.start();
 				try {
 					synchronized (startupMonitor) {
@@ -109,9 +107,14 @@ public class ZmqSendingMessageHandler extends AbstractMessageHandler implements 
 	public void stop() {
 		synchronized (lifecycleMonitor) {
 			if (running) {
+				socketThread.interrupt();
 				running = false;
 			}
 		}
+	}
+	
+	public void shutdownZmq() {
+		this.stop();
 	}
 	
 	public boolean isRunning() {
@@ -138,11 +141,7 @@ public class ZmqSendingMessageHandler extends AbstractMessageHandler implements 
 	}
 	
 	public void setSocketType(String socketTypeName) {
-		Field socketTypeField = ReflectionUtils.findField(ZMQ.class, socketTypeName);
-		if (socketTypeField == null  || socketTypeField.getType() != int.class) {
-			throw new BeanCreationException(String.format("%s is not a valid ZMQ socket type", socketTypeName));
-		}
-		socketType = (Integer) ReflectionUtils.getField(socketTypeField, null);
+		socketType = ZmqEndpointUtil.setSocketType(socketTypeName);
 	}
 	
 	public void setConverter(Converter<Object, byte[]> converter) {

@@ -17,7 +17,7 @@ public class JsonByteArrayToMapConverter implements Converter<byte[], Map<Object
 	public Map<Object, Object> convert(byte[] bytes) {
 
 		try {
-			return mapper.readValue(bytes, new TypeReference<HashMap<String,String>>(){});
+			return mapper.readValue(bytes, new TypeReference<HashMap<String, String>>(){});
 		} catch (IOException e) {
 			throw new ConversionFailedException(
 					TypeDescriptor.valueOf(byte[].class), 

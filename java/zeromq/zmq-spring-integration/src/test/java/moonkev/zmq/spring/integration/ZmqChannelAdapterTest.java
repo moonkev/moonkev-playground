@@ -14,10 +14,6 @@ import org.testng.annotations.Test;
 @ContextConfiguration(locations="/zmq-channel-adapter-test.xml")
 public class ZmqChannelAdapterTest extends AbstractTestNGSpringContextTests {
 
-	static interface Gateway {
-		void send(Object data);
-	}
-	
 	@Autowired
 	Gateway msgpackContainerGateway;
 	

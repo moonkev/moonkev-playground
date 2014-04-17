@@ -12,7 +12,7 @@ public class ZmqContextManager implements Lifecycle {
 		
 	private volatile boolean running = false;
 		
-	private Collection<Thread> socketThreads = new HashSet<Thread>();
+	private Collection<ZmqContextShutdownListener> shutdownListeners = new HashSet<ZmqContextShutdownListener>();
 	
 	public ZmqContextManager(int ioThreads) {
 		context = new ZContext(ioThreads);
@@ -28,8 +28,8 @@ public class ZmqContextManager implements Lifecycle {
 	
 	public void stop() {
 		running = false;
-		for (Thread thread : socketThreads) {
-			thread.interrupt();
+		for (ZmqContextShutdownListener listener : shutdownListeners) {
+			listener.shutdownZmq();
 		}
 		context.getContext().term();
 	}
@@ -38,7 +38,7 @@ public class ZmqContextManager implements Lifecycle {
 		return running;
 	}
 	
-	public void registerThread(Thread thread) {
-		socketThreads.add(thread);
+	public void registerShutdownListener(ZmqContextShutdownListener listener) {
+		shutdownListeners.add(listener);
 	}
 }

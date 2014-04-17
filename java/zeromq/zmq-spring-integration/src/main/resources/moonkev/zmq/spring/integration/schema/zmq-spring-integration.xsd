@@ -40,16 +40,6 @@
 		<xsd:complexType>
 			<xsd:complexContent>
 				<xsd:extension base="abstract-zmq-channel-adapter">
-					<xsd:attribute name="channel" type="xsd:string">
-						<xsd:annotation>
-							<xsd:appinfo>
-								<tool:annotation kind="ref">
-									<tool:expected-type
-										type="org.springframework.integration.MessageChannel" />
-								</tool:annotation>
-							</xsd:appinfo>
-						</xsd:annotation>
-					</xsd:attribute>
 					<xsd:attribute name="error-channel" type="xsd:string">
 						<xsd:annotation>
 							<xsd:appinfo>
@@ -86,7 +76,55 @@
 						<xsd:element name="request-handler-advice-chain" type="integration:adviceChainType"
 							minOccurs="0" maxOccurs="1" />
 					</xsd:all>
-					<xsd:attribute name="channel" type="xsd:string">
+					<xsd:attribute name="task-executor" type="xsd:string">
+						<xsd:annotation>
+							<xsd:documentation>
+								Specifies a specific Executor to be used for handling acknowledgments in
+								the UDP adapter. If not supplied, an internal
+								pooled executor will be used. Needed on some platforms that require
+								the use of specific
+								task executors such as a WorkManagerTaskExecutor.
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:attribute>
+					<xsd:attribute name="order">
+						<xsd:annotation>
+							<xsd:documentation>
+								Specifies the order for invocation when this
+								endpoint is connected as a
+								subscriber to a SubscribableChannel.
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:attribute>
+				</xsd:extension>
+			</xsd:complexContent>
+		</xsd:complexType>
+	</xsd:element>
+	
+	<xsd:element name="outbound-gateway">
+		<xsd:annotation>
+			<xsd:documentation>
+				Defines an outbound ZMQ socket-sending Outbound Gateway.
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:complexContent>
+				<xsd:extension base="abstract-zmq-message-endpoint">
+					<xsd:all>
+						<xsd:element name="request-handler-advice-chain" type="integration:adviceChainType"
+							minOccurs="0" maxOccurs="1" />
+					</xsd:all>
+					<xsd:attribute name="request-channel" type="xsd:string">
+						<xsd:annotation>
+							<xsd:appinfo>
+								<tool:annotation kind="ref">
+									<tool:expected-type
+										type="org.springframework.integration.MessageChannel" />
+								</tool:annotation>
+							</xsd:appinfo>
+						</xsd:annotation>
+					</xsd:attribute>
+					<xsd:attribute name="reply-channel" type="xsd:string">
 						<xsd:annotation>
 							<xsd:appinfo>
 								<tool:annotation kind="ref">
@@ -116,18 +154,37 @@
 							</xsd:documentation>
 						</xsd:annotation>
 					</xsd:attribute>
+					<xsd:attribute name="send-timeout" type="xsd:string" />
+					<xsd:attribute name="receive-timeout" type="xsd:string" />
+					<xsd:attribute name="linger" type="xsd:string" />
 				</xsd:extension>
 			</xsd:complexContent>
 		</xsd:complexType>
 	</xsd:element>
 
 	<xsd:complexType name="abstract-zmq-channel-adapter">
-		<xsd:attribute name="address" type="xsd:string" />
-		<xsd:attribute name="bind" type="xsd:string" />
-		<xsd:attribute name="topic" type="xsd:string" />
-		<xsd:attribute name="context-manager" type="xsd:string" default="zmqContextManager" />
-		<xsd:attribute name="socket-type" type="xsd:string" />
-		<xsd:attribute name="converter" type="xsd:string" />
+		<xsd:complexContent>
+			<xsd:extension base="abstract-zmq-message-endpoint">
+				<xsd:attribute name="channel" type="xsd:string">
+					<xsd:annotation>
+						<xsd:appinfo>
+							<tool:annotation kind="ref">
+								<tool:expected-type
+									type="org.springframework.integration.MessageChannel" />
+							</tool:annotation>
+						</xsd:appinfo>
+					</xsd:annotation>
+				</xsd:attribute>
+				<xsd:attribute name="topic" type="xsd:string" />
+				<xsd:attribute name="converter" type="xsd:string" />
+			</xsd:extension>
+		</xsd:complexContent>
 	</xsd:complexType>
 
+	<xsd:complexType name="abstract-zmq-message-endpoint">
+		<xsd:attribute name="address" type="xsd:string" />
+		<xsd:attribute name="bind" type="xsd:string" />
+		<xsd:attribute name="context-manager" type="xsd:string" default="zmqContextManager" />
+		<xsd:attribute name="socket-type" type="xsd:string" />
+	</xsd:complexType>
 </xsd:schema>

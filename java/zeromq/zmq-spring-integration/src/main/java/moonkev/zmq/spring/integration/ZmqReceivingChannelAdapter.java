@@ -1,14 +1,11 @@
 package moonkev.zmq.spring.integration;
 
-import java.lang.reflect.Field;
 import java.util.Arrays;
 
-import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.integration.endpoint.MessageProducerSupport;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.util.Assert;
-import org.springframework.util.ReflectionUtils;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQ.Socket;
 
@@ -109,11 +106,7 @@ public class ZmqReceivingChannelAdapter extends MessageProducerSupport implement
 	}
 	
 	public void setSocketType(String socketTypeName) {
-		Field socketTypeField = ReflectionUtils.findField(ZMQ.class, socketTypeName);
-		if (socketTypeField == null  || socketTypeField.getType() != int.class) {
-			throw new BeanCreationException(String.format("%s is not a valid ZMQ socket type", socketTypeName));
-		}
-		socketType = (Integer) ReflectionUtils.getField(socketTypeField, null);
+		socketType = ZmqEndpointUtil.setSocketType(socketTypeName);
 	}
 	
 	public void setConverter(Converter<byte[], Object> converter) {
